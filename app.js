@@ -8,9 +8,10 @@ const ejs=require("ejs");
 
 const mongoose=require("mongoose");
 
-const encrypt=require("mongoose-encryption");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
-
+// const md5=require("md5");
 
 mongoose.connect("mongodb://localhost:27017/userDB", {useNewUrlParser: true,useUnifiedTopology: true});
 
@@ -27,10 +28,6 @@ const userSchema=new mongoose.Schema({
   password: String
 });
 
-
-userSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:['password']});
-
-
 const User=new mongoose.model("User",userSchema);
 
 
@@ -46,9 +43,13 @@ app.get("/register",function(req,res){
 
 app.post("/register",function(req,res){
 
+  const myPlaintextPassword=req.body.password;
+
+  bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
+      // Store hash in your password DB.
       const newUser=new User({
         email:req.body.username,
-        password: req.body.password
+        password: hash
       });
 
       newUser.save(function(err){
@@ -56,6 +57,8 @@ app.post("/register",function(req,res){
           res.render("secrets")
         }
       })
+  });
+
 })
 
 app.get("/login",function(req,res){
@@ -75,13 +78,17 @@ app.post("/login",function(req,res){
             }
             else{
                     if(foundUser){
-                  if(foundUser.password===password){
-                    res.render("secrets");
-                  }
-                  else{
-                    console.log("Incorrect Password");
-                    res.render("login")
-                  }
+                      bcrypt.compare(password, foundUser.password, function(err, result) {
+                    // result == true
+                         if(result===true){
+                             res.render("secrets");
+                         }
+                         else{
+                           console.log("Incorrect Password");
+                           res.render("login")
+                         }
+                });
+
                 }
             }
       })
