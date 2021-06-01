@@ -27,7 +27,7 @@ app.set('view engine','ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.use(session({
-  secret: 'keyboard cat',
+  secret: "This is the secret key of my life",
   resave: false,
   saveUninitialized: false
 }))
@@ -192,9 +192,6 @@ req.login(user,function(err){
 });
 
 })
-
-
-
 
 app.listen(3000,function(){
 
